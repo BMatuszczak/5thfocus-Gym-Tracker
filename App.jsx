@@ -4,7 +4,8 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "accent": "#C8F542",
   "theme": "dark",
   "unit": "kg",
-  "demoDay": "rest"
+  "demoDay": "rest",
+  "useDemo": true
 }/*EDITMODE-END*/;
 
 const ACCENT_OPTIONS = {
@@ -13,10 +14,12 @@ const ACCENT_OPTIONS = {
   '#4DA3FF': { name: 'Cobalt',  deep: '#2680E0', text: '#0A0A0B' },  // calm/cool
   '#E8E8E0': { name: 'Bone',    deep: '#B8B8B0', text: '#0A0A0B' },  // monochrome
 };
+window.ACCENT_OPTIONS = ACCENT_OPTIONS;
 
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [tab, setTab] = React.useState('today');
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
   // If there's an in-progress workout, resume into it on launch
   const initialRoute = React.useMemo(() => {
     const a = Store.get().active;
@@ -43,15 +46,20 @@ function App() {
 
   return (
     <div className="gt-app" data-theme={t.theme}>
-      {route.name === 'home' && (
+      {settingsOpen && (
+        <Settings tweaks={t} setTweak={setTweak}
+          onClose={() => setSettingsOpen(false)}
+          onJumpWorkout={(id) => { setSettingsOpen(false); setRoute({ name: 'workout', id }); }} />
+      )}
+      {!settingsOpen && route.name === 'home' && (
         <>
-          {tab === 'today' && <Home unit={t.unit} onStart={startWorkout} demoDay={t.demoDay} />}
-          {tab === 'progress' && <Progress unit={t.unit} />}
+          {tab === 'today' && <Home unit={t.unit} useDemo={t.useDemo} onStart={startWorkout} demoDay={t.demoDay} onOpenSettings={() => setSettingsOpen(true)} />}
+          {tab === 'progress' && <Progress unit={t.unit} useDemo={t.useDemo} />}
           <TabBar value={tab} onChange={setTab} />
         </>
       )}
 
-      {route.name === 'workout' && (
+      {!settingsOpen && route.name === 'workout' && (
         <Workout
           workoutId={route.id}
           unit={t.unit}

@@ -1,6 +1,38 @@
 // Progress screen — PRs, charts, streak, e1RM trends, suggested progression
 
-function Progress({ unit }) {
+function Progress({ unit, useDemo = true }) {
+  // If useDemo is off and no real data yet, show empty state
+  const realSessions = Store.get().sessions;
+  if (!useDemo && realSessions.length < 2) {
+    return (
+      <div className="gt-scroll">
+        <div className="gt-section" style={{ paddingTop: 4, paddingBottom: 16 }}>
+          <div className="gt-caption">Your progression</div>
+          <div style={{ fontSize: 32, fontWeight: 600, marginTop: 6, letterSpacing: '-0.02em' }}>
+            {realSessions.length === 0 ? "Let's build a baseline." : 'One session in.'}
+          </div>
+        </div>
+        <div className="gt-section">
+          <div className="gt-card" style={{ padding: 28, textAlign: 'center' }}>
+            <div style={{
+              width: 60, height: 60, borderRadius: 99, background: 'var(--surface-2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px',
+            }}>
+              <Icon name="chart" size={28} stroke="var(--text-3)" />
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+              {realSessions.length === 0 ? 'Log your first session' : 'Need one more session'}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, maxWidth: 280, margin: '0 auto' }}>
+              {realSessions.length === 0
+                ? 'Your PRs, e1RM trends, volume, and consistency heatmap will appear here once you start lifting.'
+                : "You've got one session logged. Trends and PRs will start showing after your second."}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   // Aggregate PRs from history (per exercise: max e1RM ever vs. previous best)
   const exercisePRs = React.useMemo(() => {
     const out = [];

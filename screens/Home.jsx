@@ -1,30 +1,39 @@
 // Home / Today screen — shows next session + stats + last session recap
 
-function Home({ unit, onStart, demoDay }) {
+function Home({ unit, useDemo = true, onStart, demoDay, onOpenSettings }) {
   const isWorkoutDay = demoDay === 'workout';
   const workout = isWorkoutDay ? WORKOUTS.wednesday : WORKOUTS.wednesday;
-  const lastSess = SESSIONS[0]; // yesterday — Monday lower body
-  const lastWorkout = WORKOUTS[lastSess.workout];
 
-  // PR check — find any exercise that hit a PR last session
+  // Real sessions take priority. If demo is off and no real ones yet, render empty state.
+  const realSessions = Store.get().sessions;
+  const sessionsAvail = useDemo ? SESSIONS : realSessions;
+  const lastSess = sessionsAvail[0];
+  const lastWorkout = lastSess ? WORKOUTS[lastSess.workout] : null;
+
+  // PR check (only if using demo)
   const lastPRs = [];
-  Object.keys(HISTORY).forEach(exId => {
-    const sess = HISTORY[exId];
-    if (sess.length < 2) return;
-    const top = Math.max(...sess[0].r.map((reps, i) => epley(sess[0].w, reps)));
-    const prev = Math.max(...sess.slice(1).flatMap(s => s.r.map(r => epley(s.w, r))));
-    if (top > prev) {
-      const ex = [...WORKOUTS.monday.exercises, ...WORKOUTS.wednesday.exercises].find(e => e.id === exId);
-      if (ex) lastPRs.push({ ex, delta: Math.round((top - prev) * 10) / 10 });
-    }
-  });
+  if (useDemo) {
+    Object.keys(HISTORY).forEach(exId => {
+      const sess = HISTORY[exId];
+      if (sess.length < 2) return;
+      const top = Math.max(...sess[0].r.map((reps, i) => epley(sess[0].w, reps)));
+      const prev = Math.max(...sess.slice(1).flatMap(s => s.r.map(r => epley(s.w, r))));
+      if (top > prev) {
+        const ex = [...WORKOUTS.monday.exercises, ...WORKOUTS.wednesday.exercises].find(e => e.id === exId);
+        if (ex) lastPRs.push({ ex, delta: Math.round((top - prev) * 10) / 10 });
+      }
+    });
+  }
 
   const totalSets = workout.exercises.reduce((a, e) => a + e.sets, 0);
 
-  // 4-week vs prior 4-week volume (smooths the Mon/Wed cadence)
-  const wkVol = SESSIONS.slice(0, 4).reduce((a, s) => a + s.volume, 0);
-  const prevWkVol = SESSIONS.slice(4, 8).reduce((a, s) => a + s.volume, 0);
-  const volDelta = Math.round(((wkVol - prevWkVol) / prevWkVol) * 100);
+  // 4-week vs prior 4-week volume (only meaningful with demo data for now)
+  const wkVol = useDemo ? SESSIONS.slice(0, 4).reduce((a, s) => a + s.volume, 0)
+                        : realSessions.slice(0, 4).reduce((a, s) => a + s.volume, 0);
+  const prevWkVol = useDemo ? SESSIONS.slice(4, 8).reduce((a, s) => a + s.volume, 0) : 0;
+  const volDelta = prevWkVol > 0 ? Math.round(((wkVol - prevWkVol) / prevWkVol) * 100) : 0;
+
+  const streak = useDemo ? STREAK : { current: 0, longest: 0, sessionsLast30: realSessions.length };
 
   return (
     <div className="gt-scroll">
@@ -37,7 +46,7 @@ function Home({ unit, onStart, demoDay }) {
               {isWorkoutDay ? 'Time to lift.' : 'Recovery day.'}
             </div>
           </div>
-          <button className="gt-btn gt-btn-ghost" style={{ padding: 10, borderRadius: 12 }}>
+          <button className="gt-btn gt-btn-ghost" style={{ padding: 10, borderRadius: 12 }} onClick={onOpenSettings}>
             <Icon name="settings" size={18} stroke="var(--text-2)" />
           </button>
         </div>
@@ -89,11 +98,11 @@ function Home({ unit, onStart, demoDay }) {
               <div className="gt-caption" style={{ fontSize: 10 }}>Streak</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <span className="gt-mono gt-tnum" style={{ fontSize: 28, fontWeight: 500 }}>{STREAK.current}</span>
-              <span style={{ fontSize: 13, color: 'var(--text-3)' }}>weeks</span>
+              <span className="gt-mono gt-tnum" style={{ fontSize: 28, fontWeight: 500 }}>{streak.current}</span>
+              <span style={{ fontSize: 13, color: 'var(--text-3)' }}>{streak.current === 1 ? 'week' : 'weeks'}</span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-              {STREAK.sessionsLast30} sessions · last 30d
+              {streak.sessionsLast30} sessions · last 30d
             </div>
           </div>
           <div className="gt-card" style={{ padding: 14 }}>
@@ -138,48 +147,69 @@ function Home({ unit, onStart, demoDay }) {
       )}
 
       {/* Last session recap */}
-      <div className="gt-section" style={{ marginBottom: 14 }}>
-        <div className="gt-caption" style={{ marginBottom: 10, paddingLeft: 4 }}>Last session</div>
-        <div className="gt-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 600 }}>{lastWorkout.name}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4, whiteSpace: 'nowrap' }}>
-                Yesterday · {lastSess.durationMin} min
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="gt-mono gt-tnum" style={{ fontSize: 22, fontWeight: 500 }}>
-                {(lastSess.volume / 1000).toFixed(1)}t
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)' }}>volume</div>
-            </div>
-          </div>
-          <div className="gt-divider" style={{ margin: '14px -2px' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {lastWorkout.exercises.slice(0, 3).map(e => {
-              const h = HISTORY[e.id];
-              if (!h) return null;
-              const s = h[0];
-              const isPR = lastPRs.some(p => p.ex.id === e.id);
-              return (
-                <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ flex: 1, fontSize: 14, color: 'var(--text-2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</div>
-                  <div className="gt-mono gt-tnum" style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap' }}>
-                    {fmtW(s.w, unit)} × {s.r[0]}
-                  </div>
-                  {isPR && <span className="gt-pill gt-pill-pr" style={{ padding: '2px 6px', fontSize: 10 }}>PR</span>}
+      {lastSess && lastWorkout ? (
+        <div className="gt-section" style={{ marginBottom: 14 }}>
+          <div className="gt-caption" style={{ marginBottom: 10, paddingLeft: 4 }}>Last session</div>
+          <div className="gt-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 600 }}>{lastWorkout.name}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4, whiteSpace: 'nowrap' }}>
+                  {useDemo ? 'Yesterday' : new Date(lastSess.date).toLocaleDateString('en', { weekday: 'long' })} · {lastSess.durationMin} min
                 </div>
-              );
-            })}
-            {lastWorkout.exercises.length > 3 && (
-              <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}>
-                + {lastWorkout.exercises.length - 3} more
               </div>
+              <div style={{ textAlign: 'right' }}>
+                <div className="gt-mono gt-tnum" style={{ fontSize: 22, fontWeight: 500 }}>
+                  {(lastSess.volume / 1000).toFixed(1)}t
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>volume</div>
+              </div>
+            </div>
+            {useDemo && (
+              <>
+                <div className="gt-divider" style={{ margin: '14px -2px' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {lastWorkout.exercises.slice(0, 3).map(e => {
+                    const h = HISTORY[e.id];
+                    if (!h) return null;
+                    const s = h[0];
+                    const isPR = lastPRs.some(p => p.ex.id === e.id);
+                    return (
+                      <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ flex: 1, fontSize: 14, color: 'var(--text-2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</div>
+                        <div className="gt-mono gt-tnum" style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                          {fmtW(s.w, unit)} × {s.r[0]}
+                        </div>
+                        {isPR && <span className="gt-pill gt-pill-pr" style={{ padding: '2px 6px', fontSize: 10 }}>PR</span>}
+                      </div>
+                    );
+                  })}
+                  {lastWorkout.exercises.length > 3 && (
+                    <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}>
+                      + {lastWorkout.exercises.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="gt-section" style={{ marginBottom: 14 }}>
+          <div className="gt-card" style={{ padding: '24px 18px', textAlign: 'center' }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 99, background: 'var(--surface-2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
+            }}>
+              <Icon name="dumbbell" size={20} stroke="var(--text-3)" />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 500 }}>No sessions logged yet</div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4, lineHeight: 1.5 }}>
+              Your first workout will appear here.<br/>Tap "Start" above to begin.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* This week schedule */}
       <div className="gt-section" style={{ marginBottom: 14 }}>
