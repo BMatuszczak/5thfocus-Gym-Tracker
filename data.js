@@ -1,117 +1,102 @@
 // Workout data + mock history.
 // All weights in kg internally; converted on display via unit toggle.
 
+// Same full-body session run twice a week (Monday + Wednesday).
+const FULL_BODY_EXERCISES = [
+  {
+    id: 'hip-thrust',
+    name: 'Hip Thrust',
+    kit: 'Machine, barbell, or dumbbell',
+    sets: 3, reps: 10, restSec: 90,
+    cue: 'Upper back on bench, weight across hips, feet flat. Push through heels to lift hips until body is flat knees-to-shoulders. Lower with control.',
+  },
+  {
+    id: 'bulgarian',
+    name: 'Bulgarian Split Squat',
+    kit: 'Dumbbells, bench',
+    sets: 3, reps: 8, perLeg: true, restSec: 90,
+    cue: 'Stand a metre in front of bench, facing away. Top of back foot on bench. DB each hand. Lower back knee toward floor, drive through front heel. All 8 one leg, then switch.',
+  },
+  {
+    id: 'back-extension',
+    name: '45° Back Extension',
+    kit: '45° hyperextension bench',
+    sets: 3, reps: 12, restSec: 75, bodyweight: true,
+    cue: 'Hips on the pad, ankles locked under the rollers. Hinge down at the hips, then squeeze glutes to lift until your body is straight. Don\'t overextend the lower back.',
+  },
+  {
+    id: 'calf-raise',
+    name: 'Calf Raise',
+    kit: 'Machine or dumbbells',
+    sets: 3, reps: 12, restSec: 60,
+    cue: 'Balls of feet on the edge of a step or platform. Drop heels for a full stretch, then drive up onto your toes as high as you can. Slow and controlled.',
+  },
+  {
+    id: 'chest-press',
+    name: 'Machine Chest Press',
+    kit: 'Machine',
+    sets: 3, reps: 10, restSec: 75,
+    cue: 'Adjust the seat so the handles sit at mid-chest. Press out until arms are nearly straight, squeeze, then return under control without letting the stack touch down.',
+  },
+  {
+    id: 'lat-pulldown',
+    name: 'Lat Pulldown',
+    kit: 'Cable machine, wide bar',
+    sets: 3, reps: 10, restSec: 75,
+    cue: 'Wide overhand grip, thighs locked under the pads. Pull the bar to your upper chest, drive elbows down, squeeze the lats, release up under control.',
+  },
+  {
+    id: 'cable-row',
+    name: 'Cable Row',
+    kit: 'Neutral-grip V handle',
+    sets: 3, reps: 12, restSec: 75,
+    cue: 'V handle, palms facing each other. Pull handle to stomach, squeeze shoulder blades, release with control.',
+  },
+  {
+    id: 'db-lat-raise',
+    name: 'DB Lateral Raise',
+    kit: 'Dumbbells',
+    sets: 3, reps: 12, restSec: 60,
+    cue: 'Light DB in each hand, slight bend in the elbows. Raise out to the sides until your arms are level with your shoulders, lead with the elbows, lower slowly.',
+  },
+  {
+    id: 'bird-dog',
+    name: 'Bird Dog',
+    sets: 3, reps: 10, perSide: true, restSec: 45, bodyweight: true,
+    cue: 'Hands and knees, hands under shoulders, knees under hips. Extend right arm + left leg, hold 2s, return. Alternate to 10 each side.',
+  },
+  {
+    id: 'core-finisher',
+    name: 'Sit-ups / Hanging Knee Raises',
+    kit: 'Mat or pull-up bar',
+    sets: 3, reps: 12, restSec: 60, bodyweight: true,
+    cue: 'Pick one. Sit-ups: feet anchored, curl all the way up, lower slow. Hanging knee raises: hang from the bar, pull knees up toward your chest without swinging.',
+  },
+  {
+    id: 'reverse-wrist-curl',
+    name: 'Reverse Wrist Curls',
+    kit: 'Dumbbells or barbell',
+    sets: 3, reps: 15, restSec: 45,
+    cue: 'Forearms resting on your thighs or a bench, palms facing down, wrists just past the edge. Curl the weight up using only your wrists, lower slowly. Keep it light.',
+  },
+];
+
 const WORKOUTS = {
   monday: {
     id: 'monday',
-    name: 'Lower Body',
+    name: 'Full Body',
     day: 'Monday',
-    durationMin: 45,
+    durationMin: 50,
     warmup: '5 min bike or rower, easy pace',
-    exercises: [
-      {
-        id: 'goblet-squat',
-        name: 'Goblet Squat',
-        sets: 3, reps: 10, restSec: 90,
-        cue: 'Hold one dumbbell vertically against your chest with both hands cupping the top end. Squat down, stand up.',
-      },
-      {
-        id: 'rdl',
-        name: 'Romanian Deadlift',
-        kit: 'Dumbbells',
-        sets: 3, reps: 10, restSec: 90,
-        cue: 'Hold a dumbbell in each hand at your sides. Push your bum back, dumbbells slide down the front of your thighs, stand back up.',
-        alt: {
-          id: 'kb-deadlift',
-          name: 'Kettlebell Deadlift',
-          when: 'If form keeps breaking down',
-          cue: 'Feet shoulder-width, one kettlebell between feet. Hinge down, grab handle with both hands, stand up driving through heels, lower with control.',
-        },
-      },
-      {
-        id: 'step-up',
-        name: 'Step-up',
-        kit: 'Dumbbells, knee-height bench',
-        sets: 3, reps: 10, perLeg: true, restSec: 60,
-        cue: 'Dumbbell in each hand. Step up with right leg, drive through heel, bring left foot up. Step down. All 10 on right, then switch.',
-      },
-      {
-        id: 'single-leg-bridge',
-        name: 'Single-leg Glute Bridge',
-        sets: 3, reps: 12, perLeg: true, restSec: 60, bodyweight: true,
-        cue: 'Lie on back, knees bent, feet flat. Lift right leg out straight. Push through left heel to lift hips. Lower. All 12 on left, then switch.',
-      },
-      {
-        id: 'side-plank',
-        name: 'Side Plank',
-        sets: 3, holdSec: 30, perSide: true, restSec: 45, bodyweight: true,
-        cue: 'Prop on forearm, elbow under shoulder. Lift hips so body is a straight line. Hold. Do both sides before resting.',
-      },
-    ],
+    exercises: FULL_BODY_EXERCISES,
   },
   wednesday: {
     id: 'wednesday',
     name: 'Full Body',
     day: 'Wednesday',
-    durationMin: 60,
-    warmup: '5 min bike or rower',
-    exercises: [
-      {
-        id: 'hip-thrust',
-        name: 'Hip Thrust',
-        kit: 'Machine, barbell, or dumbbell',
-        sets: 3, reps: 10, restSec: 90,
-        cue: 'Upper back on bench, weight across hips, feet flat. Push through heels to lift hips until body is flat knees-to-shoulders. Lower with control.',
-      },
-      {
-        id: 'bulgarian',
-        name: 'Bulgarian Split Squat',
-        kit: 'Dumbbells, bench',
-        sets: 3, reps: 8, perLeg: true, restSec: 90,
-        cue: 'Stand a metre in front of bench, facing away. Top of back foot on bench. DB each hand. Lower back knee toward floor, drive through front heel. All 8 one leg, then switch.',
-        alt: {
-          id: 'step-up',
-          name: 'Step-up',
-          when: 'If balance is off',
-          cue: 'Same as Monday: DB each hand, step up driving through heel, all reps one side then switch.',
-        },
-      },
-      {
-        id: 'cable-row',
-        name: 'Cable Row',
-        kit: 'Neutral-grip V handle',
-        sets: 3, reps: 10, restSec: 75,
-        cue: 'V handle, palms facing each other. Pull handle to stomach, squeeze shoulder blades, release with control.',
-      },
-      {
-        id: 'bird-dog',
-        name: 'Bird Dog',
-        sets: 3, reps: 8, perSide: true, restSec: 45, bodyweight: true,
-        cue: 'Hands and knees, hands under shoulders, knees under hips. Extend right arm + left leg, hold 2s, return. Alternate to 8 each side.',
-      },
-      {
-        id: 'cable-crunch',
-        name: 'Cable Crunch',
-        kit: 'High pulley + rope',
-        sets: 3, reps: 12, restSec: 60,
-        cue: 'Kneel facing machine, rope at forehead. Curl chest toward hips — not a sit-up, hips stay still. Slow on the way up.',
-      },
-      {
-        id: 'dead-bug',
-        name: 'Dead Bug',
-        sets: 3, reps: 10, perSide: true, restSec: 30, bodyweight: true,
-        cue: 'On back, arms straight up, knees 90° in air. Lower right arm overhead + left leg toward floor. Return. Then opposite. 10 each side per set.',
-      },
-    ],
-    mobility: {
-      label: 'Mobility (10 min, hips still warm)',
-      items: [
-        { name: 'Couch stretch', detail: '60s per side' },
-        { name: '90/90 hip switches', detail: '8 per side' },
-        { name: 'Pigeon pose', detail: '60s per side' },
-        { name: "World's greatest stretch", detail: '5 per side' },
-      ],
-    },
+    durationMin: 50,
+    warmup: '5 min bike or rower, easy pace',
+    exercises: FULL_BODY_EXERCISES,
   },
 };
 
