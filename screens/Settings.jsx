@@ -6,6 +6,16 @@ function Settings({ tweaks, setTweak, onClose, onJumpWorkout, onReset }) {
   const data = Store.get();
   const realSessionCount = data.sessions.length;
   const hasActive = !!data.active;
+  const [syncToken, setSyncToken] = React.useState('');
+  const [syncStatus, setSyncStatus] = React.useState(null);
+  const [syncing, setSyncing] = React.useState(false);
+  const [syncMsg, setSyncMsg] = React.useState('');
+
+  React.useEffect(() => {
+    const cfg = Sync.config();
+    if (cfg.token) setSyncToken(cfg.token);
+    Sync.status().then(setSyncStatus);
+  }, []);
 
   const exportData = () => {
     const json = Store.export();
@@ -150,12 +160,73 @@ function Settings({ tweaks, setTweak, onClose, onJumpWorkout, onReset }) {
           </div>
         </SettingsSection>
 
-        {/* About */}
-        <SettingsSection title="About">
-          <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.55, padding: '0 4px' }}>
-            Lift v0.1 · Your data is stored on this device only.
-            Export regularly if you care about it.
+        {/* Cloud sync */}
+        <SettingsSection title="Cloud sync">
+          <SettingsRow label="GitHub token" subtitle="Personal access token with 'gist' scope">
+            <input type="password" value={syncToken} placeholder="ghp_..."
+              onChange={e => setSyncToken(e.target.value)}
+              style={{
+                width: 140, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)',
+                background: 'var(--surface-2)', color: 'var(--text)', fontFamily: 'var(--f-mono)',
+                fontSize: 12, outline: 'none',
+              }} />
+          </SettingsRow>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button className="gt-btn" style={{ flex: 1, fontSize: 13, padding: '10px 14px' }}
+              onClick={async () => {
+                if (!syncToken.trim()) return;
+                Sync.saveToken(syncToken.trim());
+                setSyncMsg('Token saved');
+                setTimeout(() => setSyncMsg(''), 2000);
+              }}>
+              Save token
+            </button>
+            <button className="gt-btn" style={{ flex: 1, fontSize: 13, padding: '10px 14px' }}
+              disabled={syncing}
+              onClick={async () => {
+                setSyncing(true); setSyncMsg('');
+                try {
+                  const data = Store.get();
+                  const gist = await Sync.push(data);
+                  setSyncStatus({ connected: true, updatedAt: new Date().toISOString(), gistId: gist.id, gistUrl: gist.html_url, fileSize: 0 });
+                  setSyncMsg('Backup pushed to GitHub');
+                } catch (e) {
+                  setSyncMsg(`Error: ${e.message}`);
+                }
+                setSyncing(false);
+                setTimeout(() => setSyncMsg(''), 3000);
+              }}>
+              {syncing ? 'Syncing...' : 'Push backup'}
+            </button>
+            <button className="gt-btn" style={{ flex: 1, fontSize: 13, padding: '10px 14px' }}
+              disabled={syncing}
+              onClick={async () => {
+                setSyncing(true); setSyncMsg('');
+                try {
+                  const remote = await Sync.pull();
+                  if (confirm(`Pull remote backup? This will replace all local data with the remote version.`)) {
+                    Store.set(remote);
+                    setSyncMsg('Backup restored from GitHub. Reloading.');
+                    setTimeout(() => location.reload(), 1000);
+                  }
+                } catch (e) {
+                  setSyncMsg(`Error: ${e.message}`);
+                }
+                setSyncing(false);
+                setTimeout(() => setSyncMsg(''), 3000);
+              }}>
+              Pull backup
+            </button>
           </div>
+          {syncMsg && (
+            <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 6, paddingLeft: 4 }}>{syncMsg}</div>
+          )}
+          {syncStatus?.connected && (
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, paddingLeft: 4 }}>
+              {syncStatus.gistId ? `Gist: ${syncStatus.gistId.slice(0, 8)}...` : ''}
+              {syncStatus.updatedAt ? ` · synced ${new Date(syncStatus.updatedAt).toLocaleDateString()}` : ''}
+            </div>
+          )}
         </SettingsSection>
 
         <div style={{ height: 40 }} />

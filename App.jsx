@@ -63,7 +63,16 @@ function App() {
           workoutId={route.id}
           unit={t.unit}
           onExit={() => { Store.clearActive(); setRoute({ name: 'home' }); }}
-          onComplete={() => { setRoute({ name: 'home' }); setTab('progress'); }}
+          onComplete={() => {
+            setRoute({ name: 'home' }); setTab('progress');
+            const cfg = window.Sync?.config();
+            if (cfg?.token) {
+              setTimeout(() => {
+                const d = Store.get();
+                Sync.push(d).catch(() => {});
+              }, 500);
+            }
+          }}
         />
       )}
 
