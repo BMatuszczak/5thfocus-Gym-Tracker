@@ -212,6 +212,10 @@ function Workout({ workoutId, unit, onExit, onComplete }) {
               onCompleteSet={(idx) => completeSet(exercise.id, idx)}
               onUncompleteSet={(idx) => uncompleteSet(exercise.id, idx)}
               onUpdateSet={(idx, patch) => updateSet(exercise.id, idx, patch)}
+              onApplySuggestion={(w) => {
+                const cur = sets[exercise.id];
+                cur.forEach((s, i) => updateSet(exercise.id, i, { weightKg: w }));
+              }}
               unit={unit}
             />
           ))}
@@ -284,7 +288,7 @@ function Workout({ workoutId, unit, onExit, onComplete }) {
 function ExerciseCard({
   exercise, sets, isCurrent, isCompleted, index, total, expanded,
   onToggleExpanded, onActivate, usingAlt, onSwap,
-  onCompleteSet, onUncompleteSet, onUpdateSet, unit,
+  onCompleteSet, onUncompleteSet, onUpdateSet, onApplySuggestion, unit,
 }) {
   const displayEx = usingAlt && exercise.alt
     ? { ...exercise, name: exercise.alt.name, cue: exercise.alt.cue, id: exercise.id }
@@ -320,7 +324,11 @@ function ExerciseCard({
           {exercise.kit && (
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>{exercise.kit}</div>
           )}
-          {last && isCurrent && (
+          {last && isCurrent && (() => {
+            const shouldSuggest = last.rir.every(r => r >= 2) && last.w > 0;
+            const increment = Math.round(last.w * 0.05 * 2) / 2 || 2.5;
+            const suggested = Math.round((last.w + increment) * 2) / 2;
+            return (
             <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flexWrap: 'wrap' }}>
               <span style={{ color: 'var(--text-3)' }}>Last:</span>
               <span className="gt-mono gt-tnum" style={{ color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
@@ -328,8 +336,16 @@ function ExerciseCard({
               </span>
               <span style={{ color: 'var(--text-4)' }}>·</span>
               <span className="gt-mono" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{last.rir[0]} RIR</span>
+              {shouldSuggest && (
+                <span className="gt-pill gt-tap" style={{
+                  background: 'var(--accent-soft)', color: 'var(--accent)', fontSize: 10, padding: '3px 8px', cursor: 'pointer',
+                }} onClick={(e) => { e.stopPropagation(); onApplySuggestion(suggested); }}>
+                  Try {fmtW(suggested, unit)} +{unit === 'lb' ? Math.round(increment * 2.2046 * 2) / 2 : increment}
+                </span>
+              )}
             </div>
-          )}
+            );
+          })()}
         </div>
         {isCurrent && exercise.alt && (
           <button className="gt-pill gt-tap" style={{
