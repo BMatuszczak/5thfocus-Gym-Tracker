@@ -62,7 +62,7 @@ function App() {
         <Workout
           workoutId={route.id}
           unit={t.unit}
-          onExit={() => setRoute({ name: 'home' })}
+          onExit={() => { Store.clearActive(); setRoute({ name: 'home' }); }}
           onComplete={() => { setRoute({ name: 'home' }); setTab('progress'); }}
         />
       )}
