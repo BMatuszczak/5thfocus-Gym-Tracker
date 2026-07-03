@@ -2,6 +2,8 @@
 
 function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings }) {
   const [showPicker, setShowPicker] = React.useState(false);
+  const [showAllReal, setShowAllReal] = React.useState(false);
+  const [showAllDemo, setShowAllDemo] = React.useState(false);
 
   const demoDate = new Date('2026-05-19');
   const today = useDemo ? demoDate : new Date();
@@ -268,7 +270,7 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                 <>
                   <div className="gt-divider" style={{ margin: '14px -2px' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {lastWorkout.exercises.slice(0, 3).map(e => {
+                    {(showAllDemo ? lastWorkout.exercises : lastWorkout.exercises.slice(0, 3)).map(e => {
                       const h = HISTORY[e.id];
                       if (!h) return null;
                       const s = h[0];
@@ -283,9 +285,16 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                         </div>
                       );
                     })}
-                    {lastWorkout.exercises.length > 3 && (
-                      <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}>
+                    {!showAllDemo && lastWorkout.exercises.length > 3 && (
+                      <div className="gt-tap" style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}
+                        onClick={() => setShowAllDemo(true)}>
                         + {lastWorkout.exercises.length - 3} more
+                      </div>
+                    )}
+                    {showAllDemo && lastWorkout.exercises.length > 3 && (
+                      <div className="gt-tap" style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}
+                        onClick={() => setShowAllDemo(false)}>
+                        Show less
                       </div>
                     )}
                   </div>
@@ -294,7 +303,7 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                 <>
                   <div className="gt-divider" style={{ margin: '14px -2px' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {lastWorkout.exercises.slice(0, 5).map(e => {
+                    {(showAllReal ? lastWorkout.exercises : lastWorkout.exercises.slice(0, 5)).map(e => {
                       const exSets = lastRealSets[e.id];
                       if (!exSets || exSets.length === 0) return null;
                       const topSet = exSets.reduce((a, b) => (a.weightKg || 0) >= (b.weightKg || 0) ? a : b);
@@ -307,9 +316,16 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                         </div>
                       );
                     })}
-                    {lastWorkout.exercises.length > 5 && (
-                      <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}>
+                    {!showAllReal && lastWorkout.exercises.length > 5 && (
+                      <div className="gt-tap" style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}
+                        onClick={() => setShowAllReal(true)}>
                         + {lastWorkout.exercises.length - 5} more
+                      </div>
+                    )}
+                    {showAllReal && lastWorkout.exercises.length > 5 && (
+                      <div className="gt-tap" style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 4 }}
+                        onClick={() => setShowAllReal(false)}>
+                        Show less
                       </div>
                     )}
                   </div>
