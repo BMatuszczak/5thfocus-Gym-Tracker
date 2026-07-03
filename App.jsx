@@ -5,7 +5,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "theme": "dark",
   "unit": "kg",
   "demoDay": "rest",
-  "useDemo": true
+  "useDemo": false
 }/*EDITMODE-END*/;
 
 const ACCENT_OPTIONS = {
@@ -39,9 +39,8 @@ function App() {
     root.dataset.theme = t.theme;
   }, [t.accent, t.theme]);
 
-  const startWorkout = () => {
-    // Wednesday is the upcoming session in the demo
-    setRoute({ name: 'workout', id: 'wednesday' });
+  const startWorkout = (id) => {
+    setRoute({ name: 'workout', id });
   };
 
   return (
@@ -53,7 +52,7 @@ function App() {
       )}
       {!settingsOpen && route.name === 'home' && (
         <>
-          {tab === 'today' && <Home unit={t.unit} useDemo={t.useDemo} onStart={startWorkout} demoDay={t.demoDay} onOpenSettings={() => setSettingsOpen(true)} />}
+          {tab === 'today' && <Home unit={t.unit} useDemo={t.useDemo} onStartWorkout={startWorkout} demoDay={t.demoDay} onOpenSettings={() => setSettingsOpen(true)} />}
           {tab === 'progress' && <Progress unit={t.unit} useDemo={t.useDemo} />}
           <TabBar value={tab} onChange={setTab} />
         </>

@@ -37,14 +37,38 @@ const Icon = ({ name, size = 24, stroke = 'currentColor', strokeWidth = 1.8 }) =
 // Number stepper
 // ─────────────────────────────────────────────────────────────
 function Stepper({ value, onChange, step = 2.5, min = 0, unit = '' }) {
+  const [editing, setEditing] = React.useState(false);
+  const [editVal, setEditVal] = React.useState('');
+
+  const startEditing = () => {
+    setEditVal(String(value));
+    setEditing(true);
+  };
+
+  const commitEdit = () => {
+    const v = parseFloat(editVal);
+    if (!isNaN(v) && v >= min) {
+      onChange(Math.round(v * 10) / 10);
+    }
+    setEditing(false);
+  };
+
   return (
     <div className="gt-step">
       <button className="gt-step-btn" onClick={() => onChange(Math.max(min, Math.round((value - step) * 10) / 10))}>
         <Icon name="minus" size={18} />
       </button>
-      <div className="gt-step-val gt-tnum">
-        {value}{unit && <span style={{ fontSize: 12, color: 'var(--text-3)', marginLeft: 4 }}>{unit}</span>}
-      </div>
+      {editing ? (
+        <input type="number" className="gt-step-input" value={editVal}
+          onChange={e => setEditVal(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditing(false); }}
+          autoFocus min={min} step={step} />
+      ) : (
+        <div className="gt-step-val gt-tnum" onClick={startEditing} style={{ cursor: 'pointer' }}>
+          {value}{unit && <span style={{ fontSize: 12, color: 'var(--text-3)', marginLeft: 4 }}>{unit}</span>}
+        </div>
+      )}
       <button className="gt-step-btn" onClick={() => onChange(Math.round((value + step) * 10) / 10)}>
         <Icon name="plus" size={18} />
       </button>
