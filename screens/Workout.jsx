@@ -7,8 +7,8 @@ function Workout({ workoutId, unit, onExit, onComplete }) {
   React.useEffect(() => {
     if (!window.gsap || !pageRef.current) return;
     gsap.fromTo(pageRef.current,
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', clearProps: 'opacity,y' }
+      { opacity: 0, x: 40 },
+      { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out', clearProps: 'opacity,x' }
     );
   }, []);
 
@@ -421,8 +421,12 @@ function SetRow({ num, weightKg, reps, completed, isActive, exercise, unit, onCh
   React.useEffect(() => {
     if (completed && window.gsap && checkRef.current) {
       gsap.fromTo(checkRef.current,
-        { scale: 0.7 },
-        { scale: 1, duration: 0.35, ease: 'back.out(2)', clearProps: 'scale' }
+        { scale: 0.5, rotation: -15 },
+        { scale: 1, rotation: 0, duration: 0.45, ease: 'back.out(2.5)', clearProps: 'scale,rotation' }
+      );
+      gsap.fromTo(checkRef.current.querySelector('svg'),
+        { scale: 0 },
+        { scale: 1, duration: 0.3, ease: 'back.out(3)', delay: 0.1, clearProps: 'scale' }
       );
     }
   }, [completed]);

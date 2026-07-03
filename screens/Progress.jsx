@@ -7,8 +7,8 @@ function Progress({ unit, useDemo = true }) {
     if (!window.gsap || !pageRef.current) return;
     const sections = pageRef.current.querySelectorAll(':scope > .gt-section');
     gsap.fromTo(sections,
-      { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'power2.out', clearProps: 'opacity,y' }
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power3.out', clearProps: 'opacity,y' }
     );
   }, []);
 
