@@ -2,6 +2,15 @@
 
 function Workout({ workoutId, unit, onExit, onComplete }) {
   const workout = WORKOUTS[workoutId];
+  const pageRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!window.gsap || !pageRef.current) return;
+    gsap.fromTo(pageRef.current,
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', clearProps: 'opacity,y' }
+    );
+  }, []);
 
   // Pre-fill from last session
   const buildInitialSets = (exercise) => {
@@ -135,7 +144,7 @@ function Workout({ workoutId, unit, onExit, onComplete }) {
 
   return (
     <div className="gt-app" style={{ background: 'var(--bg)' }}>
-      <div className="gt-scroll" style={{ paddingBottom: 28 }}>
+      <div className="gt-scroll" style={{ paddingBottom: 28 }} ref={pageRef}>
         {/* Top bar */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12,
@@ -407,6 +416,16 @@ function SetRow({ num, weightKg, reps, completed, isActive, exercise, unit, onCh
   const state = completed ? 'done' : isActive ? 'active' : 'pending';
   const weightDisplay = toUnit(weightKg, unit);
   const weightStep = unit === 'lb' ? 2.5 : 1.25;
+  const checkRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (completed && window.gsap && checkRef.current) {
+      gsap.fromTo(checkRef.current,
+        { scale: 0.7 },
+        { scale: 1, duration: 0.35, ease: 'back.out(2)', clearProps: 'scale' }
+      );
+    }
+  }, [completed]);
 
   return (
     <div className="gt-set" data-state={state}>
@@ -441,7 +460,7 @@ function SetRow({ num, weightKg, reps, completed, isActive, exercise, unit, onCh
           }}>{reps}</div>
         </div>
       )}
-      <button className="gt-check" data-checked={completed} onClick={completed ? onUncomplete : onComplete}
+      <button ref={checkRef} className="gt-check" data-checked={completed} onClick={completed ? onUncomplete : onComplete}
         aria-label={completed ? 'Mark incomplete' : 'Complete set'}>
         <Icon name="check" size={22} stroke={completed ? 'var(--accent-text)' : 'var(--text-3)'} strokeWidth={completed ? 2.4 : 1.8} />
       </button>
@@ -546,11 +565,23 @@ function WorkoutComplete({ workout, sets, unit, onDone }) {
     return acc + sList.reduce((a, s) => a + (s.weightKg || 0) * (s.reps || 0), 0);
   }, 0);
   const totalSets = Object.values(sets).flat().length;
+  const completeRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!window.gsap || !completeRef.current) return;
+    const check = completeRef.current.querySelector('[data-complete-check]');
+    const stats = completeRef.current.querySelectorAll('[data-complete-stat]');
+    const btn = completeRef.current.querySelector('[data-complete-btn]');
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    if (check) tl.fromTo(check, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(2)' });
+    if (stats) tl.fromTo(stats, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.06 }, '-=0.1');
+    if (btn) tl.fromTo(btn, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.25 }, '-=0.05');
+  }, []);
 
   return (
-    <div className="gt-app">
+    <div className="gt-app" ref={completeRef}>
       <div className="gt-scroll" style={{ padding: '80px 28px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <div style={{
+        <div data-complete-check style={{
           width: 90, height: 90, borderRadius: 99,
           background: 'var(--accent-soft)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -575,14 +606,14 @@ function WorkoutComplete({ workout, sets, unit, onDone }) {
             { v: workout.exercises.length, label: 'Exercises' },
             { v: `${(totalVol / 1000).toFixed(1)}t`, label: 'Volume' },
           ].map(s => (
-            <div key={s.label} className="gt-card" style={{ padding: '12px 10px', textAlign: 'center' }}>
+            <div key={s.label} data-complete-stat className="gt-card" style={{ padding: '12px 10px', textAlign: 'center' }}>
               <div className="gt-mono gt-tnum" style={{ fontSize: 24, fontWeight: 500 }}>{s.v}</div>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
-        <button className="gt-btn gt-btn-primary gt-btn-lg" style={{ width: '100%' }} onClick={onDone}>
+        <button data-complete-btn className="gt-btn gt-btn-primary gt-btn-lg" style={{ width: '100%' }} onClick={onDone}>
           Done
         </button>
       </div>

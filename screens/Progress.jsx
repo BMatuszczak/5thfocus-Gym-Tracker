@@ -1,11 +1,22 @@
 // Progress screen — PRs, charts, streak, e1RM trends, suggested progression
 
 function Progress({ unit, useDemo = true }) {
+  const pageRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!window.gsap || !pageRef.current) return;
+    const sections = pageRef.current.querySelectorAll(':scope > .gt-section');
+    gsap.fromTo(sections,
+      { opacity: 0, y: 16 },
+      { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'power2.out', clearProps: 'opacity,y' }
+    );
+  }, []);
+
   // If useDemo is off and no real data yet, show empty state
   const realSessions = Store.get().sessions;
   if (!useDemo && realSessions.length < 2) {
     return (
-      <div className="gt-scroll">
+      <div className="gt-scroll" ref={pageRef}>
         <div className="gt-section" style={{ paddingTop: 4, paddingBottom: 16 }}>
           <div className="gt-caption">Your progression</div>
           <div style={{ fontSize: 32, fontWeight: 600, marginTop: 6, letterSpacing: '-0.02em' }}>
@@ -82,7 +93,7 @@ function Progress({ unit, useDemo = true }) {
   })();
 
   return (
-    <div className="gt-scroll">
+    <div className="gt-scroll" ref={pageRef}>
       {/* Header */}
       <div className="gt-section" style={{ paddingTop: 4, paddingBottom: 16 }}>
         <div className="gt-caption">Your progression</div>

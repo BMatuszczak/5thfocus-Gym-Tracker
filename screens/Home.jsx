@@ -4,6 +4,39 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
   const [showPicker, setShowPicker] = React.useState(false);
   const [showAllReal, setShowAllReal] = React.useState(false);
   const [showAllDemo, setShowAllDemo] = React.useState(false);
+  const pageRef = React.useRef(null);
+
+  const [animStreak, setAnimStreak] = React.useState(0);
+  const [animVol, setAnimVol] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!window.gsap) return;
+    const el = pageRef.current;
+    if (!el) return;
+    const sections = el.querySelectorAll(':scope > .gt-section');
+    gsap.fromTo(sections,
+      { opacity: 0, y: 16 },
+      { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'power2.out', clearProps: 'opacity,y' }
+    );
+  }, []);
+
+  React.useEffect(() => {
+    if (!window.gsap) { setAnimStreak(streak.current); return; }
+    const s = { val: 0 };
+    gsap.to(s, {
+      val: streak.current, duration: 0.8, ease: 'power2.out',
+      onUpdate: () => setAnimStreak(Math.round(s.val)),
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (!window.gsap) { setAnimVol(+(wkVol / 1000).toFixed(1)); return; }
+    const s = { val: 0 };
+    gsap.to(s, {
+      val: +(wkVol / 1000).toFixed(1), duration: 0.8, ease: 'power2.out',
+      onUpdate: () => setAnimVol(Math.round(s.val * 10) / 10),
+    });
+  }, []);
 
   const demoDate = new Date('2026-05-19');
   const today = useDemo ? demoDate : new Date();
@@ -100,7 +133,7 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
   const displayDateStr = displayToday.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
-    <div className="gt-scroll">
+    <div className="gt-scroll" ref={pageRef}>
         {/* Header */}
         <div className="gt-section" style={{ paddingTop: 4, paddingBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -199,7 +232,7 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                 <div className="gt-caption" style={{ fontSize: 10 }}>Streak</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span className="gt-mono gt-tnum" style={{ fontSize: 28, fontWeight: 500 }}>{streak.current}</span>
+                <span className="gt-mono gt-tnum" style={{ fontSize: 28, fontWeight: 500 }}>{animStreak}</span>
                 <span style={{ fontSize: 13, color: 'var(--text-3)' }}>{streak.current === 1 ? 'week' : 'weeks'}</span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
@@ -212,7 +245,7 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                 <div className="gt-caption" style={{ fontSize: 10, whiteSpace: 'nowrap' }}>Volume {'\u00B7'} 4wk</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span className="gt-mono gt-tnum" style={{ fontSize: 28, fontWeight: 500 }}>{(wkVol / 1000).toFixed(1)}</span>
+                <span className="gt-mono gt-tnum" style={{ fontSize: 28, fontWeight: 500 }}>{animVol.toFixed(1)}</span>
                 <span style={{ fontSize: 13, color: 'var(--text-3)' }}>t</span>
               </div>
               <div style={{ fontSize: 11, color: volDelta > 0 ? 'var(--good)' : 'var(--text-3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
