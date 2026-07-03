@@ -1,7 +1,6 @@
 // Home / Today screen — shows next session + stats + last session recap
 
 function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings }) {
-  const [showPicker, setShowPicker] = React.useState(false);
   const [showAllReal, setShowAllReal] = React.useState(false);
   const [showAllDemo, setShowAllDemo] = React.useState(false);
   const pageRef = React.useRef(null);
@@ -177,51 +176,13 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
                 ))}
               </div>
 
-              <button className="gt-btn gt-btn-primary gt-btn-lg" style={{ width: '100%' }} onClick={() => setShowPicker(true)}>
+              <button className="gt-btn gt-btn-primary gt-btn-lg" style={{ width: '100%' }} onClick={() => onStartWorkout(workout.id)}>
                 <Icon name="play" size={16} stroke="var(--accent-text)" />
                 {isWorkoutDay ? 'Start workout' : 'Start session early'}
               </button>
             </div>
           </div>
         </div>
-
-        {/* Workout picker overlay */}
-        {showPicker && (
-          <div style={{
-            position: 'fixed', inset: 0, zIndex: 50,
-            background: 'rgba(0,0,0,0.6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 20,
-          }} onClick={() => setShowPicker(false)}>
-            <div style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 22,
-              padding: 24,
-              width: '100%', maxWidth: 340,
-            }} onClick={e => e.stopPropagation()}>
-              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Pick a workout</div>
-              <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 20 }}>
-                Choose which session to start
-              </div>
-              {['monday', 'wednesday'].map(id => (
-                <button key={id} className="gt-btn gt-btn-lg" style={{
-                  width: '100%', marginBottom: 10,
-                  background: workout.id === id ? 'var(--accent)' : 'var(--surface-2)',
-                  color: workout.id === id ? 'var(--accent-text)' : 'var(--text)',
-                  justifyContent: 'space-between',
-                }} onClick={() => { setShowPicker(false); onStartWorkout(id); }}>
-                  <span>{WORKOUTS[id].day} {'\u00B7'} {WORKOUTS[id].name}</span>
-                  <Icon name="play" size={14} stroke={workout.id === id ? 'var(--accent-text)' : 'var(--text-2)'} />
-                </button>
-              ))}
-              <button className="gt-btn" style={{ width: '100%', background: 'transparent', border: '1px solid var(--border)' }}
-                onClick={() => setShowPicker(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Quick stats row */}
         <div className="gt-section" style={{ marginBottom: 14 }}>
