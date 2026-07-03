@@ -23,7 +23,7 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
   const realSessions = Store.get().sessions;
   const sessionsAvail = useDemo ? SESSIONS : realSessions;
   const lastSess = sessionsAvail[0];
-  const lastWorkout = lastSess ? WORKOUTS[lastSess.workout] : null;
+  const lastWorkout = lastSess ? WORKOUTS[lastSess.workout || lastSess.workoutId] : null;
 
   const lastPRs = [];
   if (useDemo) {
@@ -82,7 +82,8 @@ function Home({ unit, useDemo = true, onStartWorkout, demoDay, onOpenSettings })
   const lastRealSets = React.useMemo(() => {
     if (useDemo || !lastSess) return null;
     const allSets = Store.get().sets;
-    const sessionSets = allSets.filter(s => s.date === lastSess.date && s.workoutId === lastSess.workout);
+    const wid = lastSess.workout || lastSess.workoutId;
+    const sessionSets = allSets.filter(s => s.date === lastSess.date && s.workoutId === wid);
     const grouped = {};
     sessionSets.forEach(s => {
       if (!grouped[s.exId]) grouped[s.exId] = [];
